@@ -10,7 +10,6 @@ import (
 )
 
 func TestTxTransfer(t *testing.T) {
-	Store := NewStore(*testdb)
 
 	acc1 := CreateOwnerAccount(t)
 	acc2 := CreateOwnerAccount(t)
@@ -27,7 +26,7 @@ func TestTxTransfer(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		go func() {
-			result, err := Store.TransferTx(context.Background(), TransferTxParams{
+			result, err := testQuries.TransferTx(context.Background(), TransferTxParams{
 				FromAccountId: acc1.ID,
 				ToAccountId:   acc2.ID,
 				Ammount:       tammount,
@@ -54,7 +53,7 @@ func TestTxTransfer(t *testing.T) {
 		require.NotZero(t, transfer.ID)
 		require.NotZero(t, transfer.CreatedAt)
 
-		_, err = Store.GetTransfer(context.Background(), transfer.ID)
+		_, err = testQuries.GetTransfer(context.Background(), transfer.ID)
 		require.NoError(t, err)
 
 		//check entry
@@ -65,7 +64,7 @@ func TestTxTransfer(t *testing.T) {
 		require.NotZero(t, transfer.ID)
 		require.NotZero(t, transfer.CreatedAt)
 
-		_, err = Store.GetEntry(context.Background(), fromentry.ID)
+		_, err = testQuries.GetEntry(context.Background(), fromentry.ID)
 		require.NoError(t, err)
 
 		//check entry
@@ -76,7 +75,7 @@ func TestTxTransfer(t *testing.T) {
 		require.NotZero(t, toentry.ID)
 		require.NotZero(t, toentry.CreatedAt)
 
-		_, err = Store.GetEntry(context.Background(), toentry.ID)
+		_, err = testQuries.GetEntry(context.Background(), toentry.ID)
 		require.NoError(t, err)
 
 		// check accounts
@@ -118,7 +117,7 @@ func TestTxTransfer(t *testing.T) {
 }
 
 func TestTxTransferDeadlock(t *testing.T) {
-	Store := NewStore(*testdb)
+	//Store := NewStore(*testdb)
 
 	acc1 := CreateOwnerAccount(t)
 	acc2 := CreateOwnerAccount(t)
@@ -141,7 +140,7 @@ func TestTxTransferDeadlock(t *testing.T) {
 		}
 		go func() {
 
-			_, err := Store.TransferTx(context.Background(), TransferTxParams{
+			_, err := testQuries.TransferTx(context.Background(), TransferTxParams{
 				FromAccountId: fromaccountid,
 				ToAccountId:   toaccountid,
 				Ammount:       tammount,
