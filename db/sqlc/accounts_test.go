@@ -12,8 +12,9 @@ import (
 )
 
 func CreateOwnerAccount(t *testing.T) Account {
+	user := CreateUserAccount(t)
 	arg := CreateAccountParams{
-		Owner:    util.GenerateUser(),
+		Owner:    user.Username,
 		Balance:  util.GenerateMoney(),
 		Currency: util.GenerateCurrency(),
 	}

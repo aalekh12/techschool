@@ -20,4 +20,7 @@ migratedown:
 migratedown1:
 	migrate -path db/migration -database "$(DB_URL)" -verbose down 1
 
-.PHONY: network postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 
+mock:
+	mockgen -package mockdb -destination db/mock/store.go github.com/techschool/samplebank/db/sqlc Store
+
+.PHONY: network postgres createdb dropdb migrateup migratedown migrateup1 migratedown1 mock
