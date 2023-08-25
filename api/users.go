@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"net/http"
 	"time"
 
@@ -58,4 +59,56 @@ func (server *Server) CreateUserAccount(ctx *gin.Context) {
 		CreatedAt:         user.CreatedAt,
 	}
 	ctx.JSON(http.StatusOK, res)
+}
+
+type loginuserAccountRequest struct {
+	Username string `json:"username" binding:"required,alphanum"`
+	Password string `json:"password" binding:"required,min=8"`
+}
+
+type loginresponse struct {
+	AccessToken string             `json:"access_token"`
+	User        CreateUserResponse `json:"user"`
+}
+
+func (server *Server) loginUser(ctx *gin.Context) {
+	var req loginuserAccountRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorresponse(err))
+		return
+	}
+
+	user, err := server.Store.GetUsers(ctx, req.Username)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorresponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorresponse(err))
+		return
+	}
+	err = util.ComparePassword(req.Password, user.HashedPassword)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorresponse(err))
+		return
+	}
+
+	accesstoken, err := server.tokenmaker.CreateToken(user.Username, server.config.AccessTimeDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorresponse(err))
+		return
+	}
+	res := CreateUserResponse{
+		FullName:          user.FullName,
+		Username:          user.Username,
+		Email:             user.Email,
+		PasswordChnagedAt: user.PasswordChnagedAt,
+		CreatedAt:         user.CreatedAt,
+	}
+	rsp := loginresponse{
+		AccessToken: accesstoken,
+		User:        res,
+	}
+
+	ctx.JSON(http.StatusOK, rsp)
 }
